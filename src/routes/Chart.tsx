@@ -2,6 +2,8 @@ import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import { fetchCoinHistory } from "../api";
 import Apexcharts from "react-apexcharts"
+import { useRecoilValue } from "recoil";
+import { isDarkAtom } from "../atoms";
 interface ChartProps {
     coinId:string;
 }
@@ -15,29 +17,33 @@ interface IHistorical {
     volume:number
     market_cap: number
 }
+
 function Chart({coinId} :ChartProps) {
-    const params = useParams();
+    const isDark = useRecoilValue(isDarkAtom)
     const {isLoading , data} = useQuery<IHistorical[]>(['ohlcv',coinId] , ()=> fetchCoinHistory(coinId));
     return (
         <div>
             {isLoading ? ("Loading chart...") :(
             <Apexcharts 
-                type="line" 
-                series={
-                [
-                    {   
-                        name:"price",
-                        data: data?.map((price)=>price.close) as number[]
-                    }
-
-                ]}
+                type="candlestick" 
+                series={[
+                    {
+                        data: data?.map((price) => {
+                            return{
+                            x: price.time_close,
+                            y: [price.open.toFixed(3), price.high.toFixed(3), price.low.toFixed(3), price.close.toFixed(3)]
+                            }
+                        })
+                    },
+                    ] as any }
                 options={{
                     theme: {
-                        mode : "dark"
+                        mode : isDark ? "dark":"light" 
                     },
                     chart : {
+                        type:"candlestick",
                         height:500, 
-                        width:500,
+                        width:700,
                         toolbar: {
                             show:false,
                         },
@@ -50,19 +56,22 @@ function Chart({coinId} :ChartProps) {
                     grid: {
                         show:false,
                     },
-                    yaxis:{
-                        show:false,
+                    yaxis : {
+                        show : false,
                     },
                     xaxis:{
-                        labels: {
-                            show:false,
-                        },
-                        axisTicks : {
-                            show:false,
-                        },
-                        axisBorder: {
-                            show:false,
-                        }
+                       type:"datetime",
+                        categories : data?.map((price)=>price.time_close)
+                    },
+                    fill : {
+                        type :"gradient",
+                        gradient : {gradientToColors : ["blue"] , stops :[0,100]}
+                    },
+                    colors : ["red"],
+                    tooltip : {
+                        y: {
+                            formatter : (value) => `$${value.toFixed(2)}`
+                        } 
                     }
                 }}>
             </Apexcharts>

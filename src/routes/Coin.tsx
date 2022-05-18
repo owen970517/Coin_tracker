@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
+import {Helmet} from "react-helmet"
 import { Route, Routes, useLocation, useParams ,useMatch } from "react-router-dom"
 import styled from "styled-components"
 import { fetchCoinInfo, fetchCoinPrice } from "../api";
 import Chart from "./Chart";
 import Price from "./Price";
+import { useSetRecoilState } from "recoil";
+import { isDarkAtom } from "../atoms";
 interface ILocation {
     state:{
     name:string;
@@ -88,15 +91,28 @@ function Coin() {
             setLoading(false);
         })();
     },[coinId]) */
+    const setDarkAtom =useSetRecoilState(isDarkAtom);
+    const toggleAtom = () => { setDarkAtom((prev) => !prev)}
     const {isLoading : infoLoading , data : infoData} = useQuery<infoData>(["info",coinId] , ()=>fetchCoinInfo(coinId? coinId :""));
-    const {isLoading: priceLoading , data:priceData} = useQuery<priceData>(["price",coinId] , ()=>fetchCoinPrice(coinId? coinId : ""));
+    const {isLoading: priceLoading , data: priceData} = useQuery<priceData>(["price",coinId] , ()=>fetchCoinPrice(coinId? coinId : ""));
     const loading = infoLoading || priceLoading
     return(
             <Container>
+                <Helmet>
+                  <title>
+                    {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
+                  </title>
+                </Helmet>
                 <Header>
+                <BackBtn>
+                  <Link to='/'>홈으로</Link>
+                </BackBtn>
                 <Title>
                     {state?.name ? state.name : loading ? "Loading..." : infoData?.name}
                 </Title>
+                <ThemeMode onClick={toggleAtom}>
+                  테마 변경
+                </ThemeMode>
                 </Header>
                 { loading ? (<Loader> Loading...</Loader>) :
                 (
@@ -111,8 +127,8 @@ function Coin() {
                         <span>${infoData?.symbol}</span>
                       </OverviewItem>
                       <OverviewItem>
-                        <span>Open Source:</span>
-                        <span>{infoData?.open_source ? "Yes" : "No"}</span>
+                        <span>Price:</span>
+                        <span>${priceData?.quotes.USD.price.toFixed(2)}</span>
                       </OverviewItem>
                     </Overview>
                     <Description>{infoData?.description}</Description>
@@ -135,7 +151,7 @@ function Coin() {
                         </Tab>
                     </Tabs>
                     <Routes>
-                        <Route path="price" element={<Price/>}></Route>
+                        <Route path="price" element={<Price coinId={coinId!}/>}></Route>
                         <Route path="chart" element={<Chart coinId={coinId!} />} ></Route>
                     </Routes>
 
@@ -152,7 +168,7 @@ const Container = styled.div`
 const Header= styled.header`
     height:10vh;
     display:flex;
-    justify-content:center;
+    justify-content:space-around;
     align-items:center;
 `
 const Loader = styled.span`
@@ -184,7 +200,7 @@ const OverviewItem = styled.div`
 `;
 const Description = styled.p`
   margin: 20px 0px;
-  color : #FFF;
+  color : ${props => props.theme.textColor};
 `;
 const Tabs = styled.div`
   display: grid;
@@ -207,4 +223,11 @@ const Tab = styled.span<{isActive : boolean}>`
     display: block;
   }
 `;
+const BackBtn = styled.button`
+  border-radius:10px;
+
+`
+const ThemeMode = styled.button`
+  border-radius:10px;
+`
 export default Coin

@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Helmet } from "react-helmet";
 import { useQuery } from "react-query";
 import { Link } from "react-router-dom";
+import { useSetRecoilState } from "recoil";
 import styled from "styled-components"
 import { fetchCoins } from "../api";
+import { isDarkAtom } from "../atoms";
 
 interface ICoin {
     id:string,
@@ -13,8 +16,11 @@ interface ICoin {
     type:string,
     symbol:string
 }
+interface IToggleProps {
+    
+}
 
-function Coins() {
+function Coins({} : IToggleProps) {
 /*  const [coins,setCoins] = useState<ICoin[]>([]);
     const [loading , setLoading] = useState(true);
     useEffect(()=>{
@@ -25,11 +31,19 @@ function Coins() {
             setLoading(false);
         })();
     },[]); */
+    const setDarkAtom =useSetRecoilState(isDarkAtom);
+    const toggleAtom = () => { setDarkAtom((prev) => !prev)}
     const {isLoading , data} = useQuery<ICoin[]>("allCoins",fetchCoins)
     return(
         <Container>
+                <Helmet>
+                  <title>
+                    Coins
+                  </title>
+                </Helmet>
             <Header>
                 <Title>Coins</Title>
+                <button onClick={toggleAtom}>Toggle</button>
             </Header>
             { isLoading ? (<Loader> Loading...</Loader>) : (<CoinList>
                 {data?.slice(0,10).map((coin)=>  
@@ -64,8 +78,8 @@ const CoinList = styled.ul`
 
 `
 const Coin = styled.li`
-    background-color:#fff;
-    color : ${props => props.theme.bgColor};
+    background-color:${props => props.theme.bgList};
+    color : ${props => props.theme.textColor};
     border-radius:30px;
     margin-bottom:10px;
     a {

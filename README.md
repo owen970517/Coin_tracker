@@ -5,3 +5,4 @@
 - css는 styled-component를 활용하여 만듦
 - ApexCharts 라이브러리를 활용하여 코인의 등락 차트를 만듦
 - 중첩 라우팅을 활용하여 만듦
+- Recoil을 사용하여 state management를 쉽게 하는 방법을 알게되었습니다.
